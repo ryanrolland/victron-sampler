@@ -3,13 +3,13 @@ package com.catalina.victron;
 public class VEDirectSampler {
 
   
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     
   //computeChecksum();
   
     String batteryCapacityResult = ":7001000C80076";
     
-    String data = batteryCapacityResult.substring(8, batteryCapacityResult.length()-2);
+    int data = convertDataToInt(batteryCapacityResult,true);//batteryCapacityResult.substring(8, batteryCapacityResult.length()-2);
     System.out.println(data);
     
     
@@ -56,6 +56,49 @@ public class VEDirectSampler {
     return format;
     
   }
+  
+  public static int convertDataToInt(String received, boolean isSigned) throws Exception {
+    
+    String data = received.substring(8, received.length()-2);
+    String buffer = "";
+    for(int i=0;i<data.length();i=i+2) {
+      String substring = data.substring(i, i+2);
+      buffer = substring+buffer;
+    }
+    
+    data = buffer;
+
+    
+    
+    int length = data.length();
+    
+    int result;
+    switch(length) {
+      case 2:
+      case 4:
+        result = parseHexString(isSigned, data);
+      break;
+      default:
+        throw new Exception("Unsupported length of data:"+length);
+      
+    }
+    
+    
+    return result;
+    
+  }
+
+  public static int parseHexString(boolean isSigned, String data) {
+    int result;
+    if(isSigned) {
+      result = Integer.parseInt(data, 16);
+    } else {
+      result = Integer.parseUnsignedInt(data, 16);
+    }
+    return result;
+  }
+  
+  
   
   public static String getVoltageCommandWithChecksum() {
     //checksum 0x55 - 7 - ED - 8D - 00 = 
