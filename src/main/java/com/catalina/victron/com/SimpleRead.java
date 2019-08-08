@@ -75,7 +75,7 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
   serialPort.notifyOnDataAvailable(true);
 
   try {
-      serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8, 
+      serialPort.setSerialPortParams(19200, SerialPort.DATABITS_8, 
                      SerialPort.STOPBITS_1, 
                      SerialPort.PARITY_NONE);
   } catch (UnsupportedCommOperationException e) {}
