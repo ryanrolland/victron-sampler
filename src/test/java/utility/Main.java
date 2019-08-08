@@ -1,71 +1,73 @@
 package utility;
 
-import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Calendar;
+import java.util.Date;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
 
 public class Main {
-    
-    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-    private static final String CAS_URL = "https://ds2.ficoh.com/loginserver/login";
-    private static final String REST_BASE_URL = "https://ds2.ficoh.com/agencyportal"; 
+     
     
     public static void main(String[] args) throws IOException {
         
-        CasLogin casLogin = new CasLogin("foo@pyramidins.com", "asdf142536", CAS_URL);
-        
-        String serviceTicket = casLogin.getServiceTicket("REST_BASE_URL");
-        
-//        RestClient client = new RestClient();
-//        
-//        /* example GET */
-//        Main main = new Main();
-//        String getSimple =  REST_BASE_URL + "/rest/api/v1/messages";
-//        main.printContent( client.get(getSimple + "?ticket=" + casLogin.getServiceTicket(getSimple)) );
-//        
-//        String getParams =  REST_BASE_URL + "/rest/api/v1/messages?page=1";
-//        main.printContent( client.get(getParams + "&ticket=" + casLogin.getServiceTicket(getParams)));
-//        
-//        String getSimple2 = REST_BASE_URL + "/rest/api/v1/messages/4405078";
-//        main.printContent( client.get(getSimple2 + "?ticket=" + casLogin.getServiceTicket(getSimple2)));
-//        
-//        /* Example POST */
-//        // see https://groups.google.com/forum/#!searchin/jasig-cas-user/post$20to$20rest$20resource/jasig-cas-user/NWmFahj9usk/YBECPJULN3sJ
-//        // looks like <property name="redirectAfterValidation" value="true" /> should be false in our webapp's spring security context (casContext.xml)
-//        String postMessage = REST_BASE_URL + "/rest/api/v1/messages";
-//        Map<String, Object> params = new HashMap<String, Object>();
-//        params.put("body", "message body");
-//        params.put("toAddress", "11220"); // from address lookup
-//        params.put("subject", "message subject");
-//        main.printContent( client.post(postMessage + "?ticket=" + casLogin.getServiceTicket(postMessage), params));
+      
+      File file = new File("c:\\tmp\\sampler\\experiment1.txt");
+      FileOutputStream fos = new FileOutputStream(file);
+      
+      fos.write("date, value\r\n".getBytes());
+      
+     Date now = new Date();
+     Date start = atStartOfDay(now);
+     Date end = atEndOfDay(now);
+     
+     Date moment = new Date(start.getTime());
+     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS000");
+     
+     while(moment.before(end)) {
+       String format = dateFormat.format(moment)+","+Math.sin(moment.getTime())+" \r\n";
+       fos.write(format.getBytes());
+       moment.setTime(moment.getTime()+100);
+       
+     }
+     
+     System.out.println(start);
+     System.out.println(end);
+      
+      fos.close();
+    
     }
 
-    private void printContent(HttpURLConnection con) {
-        if (con != null) {
+    
+    
+    
 
-            try {
-                
-                LOGGER.info("Response Code -> " + con.getResponseCode());
-                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+    public static Date atStartOfDay(Date date) {
+      LocalDateTime localDateTime = dateToLocalDateTime(date);
+      LocalDateTime startOfDay = localDateTime.with(LocalTime.MIN);
+      return localDateTimeToDate(startOfDay);
+  }
 
-                String input;
-                StringBuilder content = new StringBuilder();
-                while ((input = br.readLine()) != null) {
-                    content.append(input);
-                }
-                br.close();
-                LOGGER.info("Content -> " + content.toString());
+  public static Date atEndOfDay(Date date) {
+      LocalDateTime localDateTime = dateToLocalDateTime(date);
+      LocalDateTime endOfDay = localDateTime.with(LocalTime.MAX);
+      return localDateTimeToDate(endOfDay);
+  }
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+  private static LocalDateTime dateToLocalDateTime(Date date) {
+      return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+  }
 
-        }
-
-    }
-
+  private static Date localDateTimeToDate(LocalDateTime localDateTime) {
+      return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+  }
 }
