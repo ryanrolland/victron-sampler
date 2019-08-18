@@ -26,7 +26,7 @@
       <configuration>
         <archive>
           <manifest>
-            <mainClass>com.catalina.victron.VEDirectSampler</mainClass>
+            <mainClass>com.catalina.victron.com.SimpleRead</mainClass>
           </manifest>
           <manifestEntries>
             <Class-Path>.</Class-Path>

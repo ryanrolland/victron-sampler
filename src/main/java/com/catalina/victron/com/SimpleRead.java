@@ -29,7 +29,7 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
    */
   public static void main(String[] args) {
   boolean           portFound = false;
-  String            defaultPort = "/dev/term/a";
+  String            defaultPort = "ttyUSB0";
 
   if (args.length > 0) {
       defaultPort = args[0];
@@ -40,6 +40,7 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
   while (portList.hasMoreElements()) {
       portId = (CommPortIdentifier) portList.nextElement();
       if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+    	  System.out.println("COM Port with ID:"+portId.getName());
       if (portId.getName().equals(defaultPort)) {
           System.out.println("Found port: "+defaultPort);
           portFound = true;
