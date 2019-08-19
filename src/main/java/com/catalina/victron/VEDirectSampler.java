@@ -1,25 +1,195 @@
 package com.catalina.victron;
 
+import java.util.Enumeration;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
+import com.catalina.victron.com.SimpleRead;
+
+import purejavacomm.CommPortIdentifier;
+
 public class VEDirectSampler {
 
-  
-  public static void main(String[] args) throws Exception {
-    
-  //computeChecksum();
-  
-    String batteryCapacityResult = ":7001000C80076";
-    
-    int data = convertDataToInt(batteryCapacityResult,true);//batteryCapacityResult.substring(8, batteryCapacityResult.length()-2);
-    System.out.println(data);
-    
-    
-    
-    //String command = getPowerCommandWithChecksum();
-    //System.out.println(command);
-    //String commandWithCheckSum = addChecksumToCommand(command);
-    //System.out.println(commandWithCheckSum);
-    
-  }
+	  ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+
+	  public VEDirectSampler(String defaultPort) {
+		  
+		  boolean           portFound = false;
+		 
+		  Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
+
+		  while (portList.hasMoreElements()) {
+		      CommPortIdentifier portId = (CommPortIdentifier) portList.nextElement();
+		      if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+		    	  System.out.println("COM Port with ID:"+portId.getName());
+		      if (portId.getName().equals(defaultPort)) {
+		          System.out.println("Found port: "+defaultPort);
+		          portFound = true;
+		          SimpleRead reader = new SimpleRead(portId,"SimpleReadApp", queue);
+		      } 
+		      } 
+		  } 
+		  if (!portFound) {
+		      System.out.println("port " + defaultPort + " not found.");
+		  } 
+		  		  
+	  }
+	  
+	  
+	  public static void main(String[] args) throws InterruptedException {
+		  String defaultPort = "ttyUSB0";
+
+		  VEDirectSampler sampler = new VEDirectSampler(defaultPort);
+		  sampler.process();
+		  
+	  }
+	  
+	  private int manualSearch(String value) {
+		  return manualSearch(value,false);
+	  }
+	  
+	  private String printBool(boolean value) {
+		  String result = "0";
+		  if(value) {
+			  result = "1";
+		  }
+		  return result;
+	  }
+	  
+	  
+	  /**
+	   * 
+	   * PROBLEM: indexOf is not working consistently
+	   * it seems different values are returned for char references vs. system.out.println
+	   * for receive buffer.
+	   */
+	  private int manualSearch(String value, boolean debug) {
+		  int result = -1;
+		  if(value.length() >= 7) {
+			  for(int i=0;i<value.length()-8;i++) {
+
+				  if((debug) && (value.charAt(i) == 'C'))  {
+						System.out.println("===BEFORE CHECK DUMP START ===="); 
+						
+						 System.out.println(value.substring(i));
+						 
+						
+							System.out.println("===BEFORE CHECK DUMP END ====");
+						
+							int end = (value.length() - i) / 2;
+							end = i + end;
+							String smallSample = value.substring(i,end);
+							
+							System.out.println("====SECOND SMALL DUMP START ====");
+							System.out.println(smallSample);
+							System.out.println("====SECOND SMALL DUMP END ====");
+							
+							StringBuilder b = new StringBuilder();
+							
+							b.append(value.charAt(i)) ;
+							b.append(value.charAt(i+1));
+							b.append(value.charAt(i+2));
+							b.append(value.charAt(i+3));
+							b.append(value.charAt(i+4));
+							b.append(value.charAt(i+5));
+							b.append(value.charAt(i+6));
+							b.append(value.charAt(i+7));
+							System.out.println(b.toString());
+						 System.out.println(printBool(value.charAt(i) == 'C') + printBool(value.charAt(i+1) == 'h') + printBool(value.charAt(i+2) == 'e') + printBool(value.charAt(i+3) == 'c') + printBool(value.charAt(i+4) == 'k') + printBool(value.charAt(i+5) == 's') + printBool(value.charAt(i+6) == 'u') + printBool(value.charAt(i+7) == 'm'));
+						 System.out.println("============");
+						 
+					 
+					}
+				  
+				  if((value.charAt(i) == 'C') && (value.charAt(i+1) == 'h') && (value.charAt(i+2) == 'e') && (value.charAt(i+3) == 'c') && (value.charAt(i+4) == 'k') && (value.charAt(i+5) == 's') && (value.charAt(i+6) == 'u') && (value.charAt(i+7) == 'm')){
+					  return i;
+				  }
+
+			  }  
+		  }
+		  
+		  return result;
+	  }
+	  
+//	  private static String cleanTextContent(String text)
+//	  {
+//	      // strips off all non-ASCII characters
+//	      text = text.replaceAll("[^\\x00-\\x7F]", "");
+//	   
+//	      // erases all the ASCII control characters
+//	      //text = text.replaceAll("[\\p{Cntrl}&&[^]]", "");
+//	       
+//	      // removes non-printable characters from Unicode
+//	      text = text.replaceAll("\\p{C}", "");
+//	   
+//	      return text;
+//	  }
+	  
+	  String receivedBuffer = "";
+	  
+	  public void process() throws InterruptedException {
+
+		  while(true) {
+			  
+			  String poll = queue.poll();
+			  if(poll != null) {
+				  poll = poll.trim();
+				  //receivedBuffer = receivedBuffer + poll;
+				  StringBuilder builder = new StringBuilder();
+				  builder.append(receivedBuffer);
+				  builder.append(poll);
+				  receivedBuffer = builder.toString();
+				  
+ 				  int indexOf = manualSearch(receivedBuffer);
+ 				  
+ 				  
+ 				  int CHECKSUM_LINE_LENGTH = 9;
+ 				  
+				  if((indexOf != -1)) {
+					
+					  //System.out.println("=================PENDING RECEIVED BUFFER with end index:"+indexOf+"===========");
+					  //System.out.println(receivedBuffer);
+					  //System.out.println("====================================================");
+//					if(receivedBuffer.length() > 7000) {
+//						int debugIndex = manualSearch(receivedBuffer,true);
+//						System.out.println("On second debug run index was:"+debugIndex);
+//					}
+					  
+					String payload = receivedBuffer.substring(0, indexOf+CHECKSUM_LINE_LENGTH);
+					receivedBuffer = receivedBuffer.substring(indexOf+CHECKSUM_LINE_LENGTH, receivedBuffer.length());
+					  
+					System.out.println("=================PAYLOAD==SIZE:"+payload.length()+"====================");
+					System.out.println(payload);
+					System.out.println("================="+receivedBuffer.length()+"=================");  
+				  
+					
+				  }
+				  
+
+				  
+			  } else {
+				  Thread.sleep(1000);
+				  //System.out.println("sleeping");
+			  } 
+		  }
+	  }
+	
+//  public static void main(String[] args) throws Exception {
+//    
+//  //computeChecksum();
+//  
+//    String batteryCapacityResult = ":7001000C80076";
+//    
+//    int data = convertDataToInt(batteryCapacityResult,true);//batteryCapacityResult.substring(8, batteryCapacityResult.length()-2);
+//    System.out.println(data);
+//    
+//    
+//    
+//    //String command = getPowerCommandWithChecksum();
+//    //System.out.println(command);
+//    //String commandWithCheckSum = addChecksumToCommand(command);
+//    //System.out.println(commandWithCheckSum);
+//    
+//  }
 
   public static String addChecksumToCommand(String command) {
     return command + computeChecksum(command);
@@ -133,5 +303,29 @@ public class VEDirectSampler {
     return ":7001000";
   }
   
+  /*
   
+Checksum	n
+
+PID	0x203
+
+V	59237
+I	190
+P	11
+CE	-2
+3926
+SOC	908
+TTG	-1
+Alarm	O
+FF
+Relay	OFF
+AR	0
+BMV	700
+F
+W	0308
+Checksum	I
+
+  
+  
+   */
 }

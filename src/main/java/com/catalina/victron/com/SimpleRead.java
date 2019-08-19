@@ -2,8 +2,10 @@ package com.catalina.victron.com;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.TooManyListenersException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.PortInUseException;
@@ -13,46 +15,12 @@ import purejavacomm.SerialPortEventListener;
 import purejavacomm.UnsupportedCommOperationException;
 
 public class SimpleRead implements Runnable, SerialPortEventListener {
-  static CommPortIdentifier portId;
-  static Enumeration        portList;
+
   InputStream           inputStream;
   SerialPort            serialPort;
   Thread            readThread;
 
-  /**
-   * Method declaration
-   *
-   *
-   * @param args
-   *
-   * @see
-   */
-  public static void main(String[] args) {
-  boolean           portFound = false;
-  String            defaultPort = "ttyUSB0";
-
-  if (args.length > 0) {
-      defaultPort = args[0];
-  } 
- 
-  portList = CommPortIdentifier.getPortIdentifiers();
-
-  while (portList.hasMoreElements()) {
-      portId = (CommPortIdentifier) portList.nextElement();
-      if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-    	  System.out.println("COM Port with ID:"+portId.getName());
-      if (portId.getName().equals(defaultPort)) {
-          System.out.println("Found port: "+defaultPort);
-          portFound = true;
-          SimpleRead reader = new SimpleRead();
-      } 
-      } 
-  } 
-  if (!portFound) {
-      System.out.println("port " + defaultPort + " not found.");
-  } 
-  
-  } 
+  ConcurrentLinkedQueue<String> queue;
 
   /**
    * Constructor declaration
@@ -60,9 +28,11 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
    *
    * @see
    */
-  public SimpleRead() {
-  try {
-      serialPort = (SerialPort) portId.open("SimpleReadApp", 2000);
+  public SimpleRead(CommPortIdentifier portId, String comReaderName, ConcurrentLinkedQueue<String> queue) {
+  this.queue = queue;
+	  
+	  try {
+      serialPort = (SerialPort) portId.open(comReaderName, 2000);
   } catch (PortInUseException e) {}
 
   try {
@@ -129,15 +99,20 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
       break;
 
   case SerialPortEvent.DATA_AVAILABLE:
-      byte[] readBuffer = new byte[20];
+			byte[] readBuffer = new byte[1024];
 
-      try {
-      while (inputStream.available() > 0) {
-          int numBytes = inputStream.read(readBuffer);
-      } 
-
-      System.out.print(new String(readBuffer));
-      } catch (IOException e) {}
+			try {
+				//int total = 0;
+				if (inputStream.available() > 0) {
+					int numBytes = inputStream.read(readBuffer);
+					//total+=numBytes;
+				}
+				
+				String string = new String(readBuffer, java.nio.charset.StandardCharsets.US_ASCII);				
+				queue.add(string);
+				
+			} catch (IOException e) {
+			}
 
       break;
   }
