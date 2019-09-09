@@ -29,12 +29,12 @@ enum states {
 	
 }
 
-public Framehandler() throws IOException {
+public Framehandler(String baseDir) throws IOException {
 	mState = states.IDLE;
-	fields.put("V", new TimeSeries("V"));
-	fields.put("I", new TimeSeries("I"));
-	fields.put("P", new TimeSeries("P"));
-	fields.put("SOC", new TimeSeries("SOC"));
+	fields.put("V", new TimeSeries("V",baseDir));
+	fields.put("I", new TimeSeries("I",baseDir));
+	fields.put("P", new TimeSeries("P",baseDir));
+	fields.put("SOC", new TimeSeries("SOC",baseDir));
 	
 }
 

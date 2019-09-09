@@ -11,6 +11,15 @@ import purejavacomm.CommPortIdentifier;
 
 public class VEDirectSampler {
 
+	//60V
+	private static final String baseDir = "/home/pi/A123/";	
+	private static String port = "ttyUSB0";
+	
+	//12V
+	//private static final String baseDir = "/home/pi/LeadAcid/";	
+	//private static String port = "ttyUSB1";
+
+	
 	  ConcurrentLinkedQueue<Byte> queue = new ConcurrentLinkedQueue<Byte>();
 
 	  public VEDirectSampler(String defaultPort) {
@@ -38,9 +47,9 @@ public class VEDirectSampler {
 	  
 	  
 	  public static void main(String[] args) throws InterruptedException, IOException {
-		  String defaultPort = "ttyUSB0";
+		  
 
-		  VEDirectSampler sampler = new VEDirectSampler(defaultPort);
+		  VEDirectSampler sampler = new VEDirectSampler(port);
 		  sampler.process();
 		  
 	  }
@@ -131,7 +140,7 @@ public class VEDirectSampler {
 	  
 	  public void process() throws InterruptedException, IOException {
 
-		  Framehandler handler = new Framehandler();
+		  Framehandler handler = new Framehandler(baseDir);
 		  
 		  while(true) {
 			  

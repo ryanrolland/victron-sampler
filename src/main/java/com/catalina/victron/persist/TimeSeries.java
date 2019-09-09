@@ -9,8 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class TimeSeries {
-
-	public static final String baseDir = "/home/pi/data/";
 	
 	Format formatter = new SimpleDateFormat("yyyy-MM-dd");
 	
@@ -21,7 +19,10 @@ public class TimeSeries {
 	
 	String fieldName;
 	
-	public TimeSeries(String fieldName) throws IOException {
+	String baseDir;
+	
+	public TimeSeries(String fieldName, String baseDir) throws IOException {
+		this.baseDir = baseDir;
 		this.fieldName = fieldName;
 		currentDate = new Date();
 		
