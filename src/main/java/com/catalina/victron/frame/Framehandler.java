@@ -1,5 +1,7 @@
 package com.catalina.victron.frame;
 
+import java.util.ArrayList;
+
 import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
 
 public class Framehandler {
@@ -8,10 +10,15 @@ public class Framehandler {
 // The name of the record that contains the checksum.
 final String CHECKSUM_TAG_NAME = "CHECKSUM";
 
+ArrayList<String> fields = new ArrayList<String>();
+
 boolean mStop = false;
 
 private states mState;
 
+
+//states listed here but not implemented:
+//CHECKSUM, RECORD_HEX
 enum states {
 	IDLE, RECORD_NAME, RECORD_BEGIN, RECORD_HEX, RECORD_VALUE, CHECKSUM;
 	
@@ -19,10 +26,10 @@ enum states {
 
 public Framehandler() {
 	mState = states.IDLE;
-	//mStop(true),
-	//mState(IDLE),
-	//mChecksum(0),
-	//mTextPointer(0)
+	fields.add("V");
+	fields.add("I");
+	fields.add("P");
+	fields.add("SOC");
 }
 
 byte[] workingBuffer = new byte[1024];
@@ -48,13 +55,15 @@ void resetWorking() {
 
 public void rxData(byte inbyte)
 {
+	//System.out.println(mState.name());
+	
 	if (mStop) return;
-	if ( (inbyte == ':') && (mState != states.CHECKSUM) ) {
-		mState = states.RECORD_HEX;
-	}
-	if (mState != states.RECORD_HEX) {
-		//mChecksum += inbyte;
-	}
+//	if ( (inbyte == ':') && (mState != states.CHECKSUM) ) {
+//		mState = states.RECORD_HEX;
+//	}
+//	if (mState != states.RECORD_HEX) {
+//		//mChecksum += inbyte;
+//	}
 	//inbyte = toupper(inbyte);
 
 	switch(mState) {
@@ -118,28 +127,31 @@ public void rxData(byte inbyte)
 			break;
 		}
 		break;
-	case CHECKSUM:
-	
-		//bool valid = mChecksum == 0;
-		//if (!valid)
-		//	logE(MODULE,"[CHECKSUM] Invalid frame");
-		//mChecksum = 0;
-		//mState = IDLE;
-		//frameEndEvent(valid);
-		break;
-	
-	case RECORD_HEX:
-		//if (hexRxEvent(inbyte)) {
-		//	mChecksum = 0;
-		//	mState = IDLE;
-		//}
-		break;
+//	case CHECKSUM:
+//	
+//		//bool valid = mChecksum == 0;
+//		//if (!valid)
+//		//	logE(MODULE,"[CHECKSUM] Invalid frame");
+//		//mChecksum = 0;
+//		//mState = IDLE;
+//		//frameEndEvent(valid);
+//		break;
+//	
+//	case RECORD_HEX:
+//		//if (hexRxEvent(inbyte)) {
+//		//	mChecksum = 0;
+//		//	mState = IDLE;
+//		//}
+//		break;
 	}
 }
 
 
 private void textRxEvent(String name, String value) {
-	System.out.println("Name:"+name+" : "+ value);
+	if (fields.contains(name)) {
+		System.out.println("Name:"+name+" : "+ value);	
+	}
+	
 }
 
 }

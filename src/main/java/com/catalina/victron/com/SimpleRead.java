@@ -24,6 +24,8 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
   SerialPort            serialPort;
   Thread            readThread;
   
+  
+  int rxCount = 0;
   ConcurrentLinkedQueue<Byte> queue;
 
   /**
@@ -69,7 +71,7 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
   public void run() {
   try {
       while(true) {
-    	  Thread.sleep(20000);
+    	  Thread.sleep(Integer.MAX_VALUE);
     	  //System.out.println("Main Receive Thread still sleeping");
       }
   } catch (InterruptedException e) {}
@@ -115,6 +117,11 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
 
 					byte value = (byte) inputStream.read();
 					queue.add(value);
+					
+					rxCount = rxCount + 1;
+					if(rxCount % 1000 == 0) {
+						System.out.println("RX Thread Still Alive with count:"+rxCount+ " Queue Size:"+queue.size());
+					}
 					
 					
 					//Framehandler
