@@ -1,8 +1,12 @@
 package com.catalina.victron.frame;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
+
+import com.catalina.victron.persist.TimeSeries;
 
 public class Framehandler {
 
@@ -10,7 +14,8 @@ public class Framehandler {
 // The name of the record that contains the checksum.
 final String CHECKSUM_TAG_NAME = "CHECKSUM";
 
-ArrayList<String> fields = new ArrayList<String>();
+HashMap<String,TimeSeries> fields = new HashMap<String,TimeSeries>();
+
 
 boolean mStop = false;
 
@@ -24,12 +29,13 @@ enum states {
 	
 }
 
-public Framehandler() {
+public Framehandler() throws IOException {
 	mState = states.IDLE;
-	fields.add("V");
-	fields.add("I");
-	fields.add("P");
-	fields.add("SOC");
+	fields.put("V", new TimeSeries("V"));
+	fields.put("I", new TimeSeries("I"));
+	fields.put("P", new TimeSeries("P"));
+	fields.put("SOC", new TimeSeries("SOC"));
+	
 }
 
 byte[] workingBuffer = new byte[1024];
@@ -53,7 +59,7 @@ void resetWorking() {
 	
 }
 
-public void rxData(byte inbyte)
+public void rxData(byte inbyte) throws IOException
 {
 	//System.out.println(mState.name());
 	
@@ -147,9 +153,11 @@ public void rxData(byte inbyte)
 }
 
 
-private void textRxEvent(String name, String value) {
-	if (fields.contains(name)) {
-		System.out.println("Name:"+name+" : "+ value);	
+private void textRxEvent(String name, String value) throws IOException {
+	if (fields.containsKey(name)) {
+		System.out.println("Name:"+name+" : "+ value);
+		TimeSeries timeSeries = fields.get(name);
+		timeSeries.write(value);
 	}
 	
 }

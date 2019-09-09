@@ -1,5 +1,6 @@
 package com.catalina.victron;
 
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -36,13 +37,14 @@ public class VEDirectSampler {
 	  }
 	  
 	  
-	  public static void main(String[] args) throws InterruptedException {
+	  public static void main(String[] args) throws InterruptedException, IOException {
 		  String defaultPort = "ttyUSB0";
 
 		  VEDirectSampler sampler = new VEDirectSampler(defaultPort);
 		  sampler.process();
 		  
 	  }
+	  
 	  
 	  private int manualSearch(String value) {
 		  return manualSearch(value,false);
@@ -127,10 +129,9 @@ public class VEDirectSampler {
 	  
 	  String receivedBuffer = "";
 	  
-	  public void process() throws InterruptedException {
+	  public void process() throws InterruptedException, IOException {
 
 		  Framehandler handler = new Framehandler();
-
 		  
 		  while(true) {
 			  
