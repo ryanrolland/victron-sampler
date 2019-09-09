@@ -1,0 +1,11 @@
+A minimal port of the Victron C Frame Handler to Java using the com.github.purejavacomm library.
+
+I have this running on a Raspberry PI 4 (ARM 32) sampling data to the file system. 
+
+The 'CHECKSUM' and 'RECORD_HEX' states are currently ignored.
+
+The VE.Direct Bus has two main modes of operation, 'listening' and 'actively sending commands'. I am just using the 'listening' mode for now which basically does a dump of all values approximately every second. 
+
+An enhanced version of this library would include support for the 'actively sending commands mode'. I believe this mode would have a better sampling rate than what is currently implemented.
+
+
