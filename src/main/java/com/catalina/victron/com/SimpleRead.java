@@ -7,6 +7,10 @@ import java.util.Enumeration;
 import java.util.TooManyListenersException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
+
+import com.catalina.victron.frame.Framehandler;
+
 import purejavacomm.CommPortIdentifier;
 import purejavacomm.PortInUseException;
 import purejavacomm.SerialPort;
@@ -19,8 +23,8 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
   InputStream           inputStream;
   SerialPort            serialPort;
   Thread            readThread;
-
-  ConcurrentLinkedQueue<String> queue;
+  
+  ConcurrentLinkedQueue<Byte> queue;
 
   /**
    * Constructor declaration
@@ -28,7 +32,7 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
    *
    * @see
    */
-  public SimpleRead(CommPortIdentifier portId, String comReaderName, ConcurrentLinkedQueue<String> queue) {
+  public SimpleRead(CommPortIdentifier portId, String comReaderName, ConcurrentLinkedQueue<Byte> queue) {
   this.queue = queue;
 	  
 	  try {
@@ -64,7 +68,10 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
    */
   public void run() {
   try {
-      Thread.sleep(20000);
+      while(true) {
+    	  Thread.sleep(20000);
+    	  //System.out.println("Main Receive Thread still sleeping");
+      }
   } catch (InterruptedException e) {}
   } 
 
@@ -99,17 +106,24 @@ public class SimpleRead implements Runnable, SerialPortEventListener {
       break;
 
   case SerialPortEvent.DATA_AVAILABLE:
-			byte[] readBuffer = new byte[1024];
 
 			try {
 				//int total = 0;
 				if (inputStream.available() > 0) {
-					int numBytes = inputStream.read(readBuffer);
+					//int numBytes = inputStream.read(readBuffer);
 					//total+=numBytes;
+
+					byte value = (byte) inputStream.read();
+					queue.add(value);
+					
+					
+					//Framehandler
+					
+					//byte[] received = ByteUtils.subArray(readBuffer, 0, numBytes);
+					//String string = new String(received, java.nio.charset.StandardCharsets.US_ASCII);				
+					//queue.add(string);				
 				}
 				
-				String string = new String(readBuffer, java.nio.charset.StandardCharsets.US_ASCII);				
-				queue.add(string);
 				
 			} catch (IOException e) {
 			}

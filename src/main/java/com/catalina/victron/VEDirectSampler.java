@@ -4,12 +4,13 @@ import java.util.Enumeration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.catalina.victron.com.SimpleRead;
+import com.catalina.victron.frame.Framehandler;
 
 import purejavacomm.CommPortIdentifier;
 
 public class VEDirectSampler {
 
-	  ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<String>();
+	  ConcurrentLinkedQueue<Byte> queue = new ConcurrentLinkedQueue<Byte>();
 
 	  public VEDirectSampler(String defaultPort) {
 		  
@@ -128,43 +129,15 @@ public class VEDirectSampler {
 	  
 	  public void process() throws InterruptedException {
 
+		  Framehandler handler = new Framehandler();
+
+		  
 		  while(true) {
 			  
-			  String poll = queue.poll();
+			  Byte poll = queue.poll();
 			  if(poll != null) {
-				  poll = poll.trim();
-				  //receivedBuffer = receivedBuffer + poll;
-				  StringBuilder builder = new StringBuilder();
-				  builder.append(receivedBuffer);
-				  builder.append(poll);
-				  receivedBuffer = builder.toString();
 				  
- 				  int indexOf = manualSearch(receivedBuffer);
- 				  
- 				  
- 				  int CHECKSUM_LINE_LENGTH = 9;
- 				  
-				  if((indexOf != -1)) {
-					
-					  //System.out.println("=================PENDING RECEIVED BUFFER with end index:"+indexOf+"===========");
-					  //System.out.println(receivedBuffer);
-					  //System.out.println("====================================================");
-//					if(receivedBuffer.length() > 7000) {
-//						int debugIndex = manualSearch(receivedBuffer,true);
-//						System.out.println("On second debug run index was:"+debugIndex);
-//					}
-					  
-					String payload = receivedBuffer.substring(0, indexOf+CHECKSUM_LINE_LENGTH);
-					receivedBuffer = receivedBuffer.substring(indexOf+CHECKSUM_LINE_LENGTH, receivedBuffer.length());
-					  
-					System.out.println("=================PAYLOAD==SIZE:"+payload.length()+"====================");
-					System.out.println(payload);
-					System.out.println("================="+receivedBuffer.length()+"=================");  
-				  
-					
-				  }
-				  
-
+				  handler.rxData(poll);
 				  
 			  } else {
 				  Thread.sleep(1000);
